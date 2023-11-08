@@ -60,7 +60,7 @@ add_repo() {
         sed -i "s/^#\[@REPO@\]/\[$CUSTOM_REPO_NAME\]\nSigLevel = Optional TrustAll\nServer = ${CUSTOM_REPO_URL//\//\\/}\n\n#\[@REPO@\]/" \
             ${pac_conf}
     else
-        sed -i -e "s/@REPO@/$1/" -e 's/^#//g' ${pac_conf}
+        sed -i -e "s/@REPO@/$1/" -e 's/^#//g' "${pac_conf}"
     fi
 }
 
