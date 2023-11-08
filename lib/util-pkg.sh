@@ -24,7 +24,7 @@ build_pkg() {
     rm -rf "${build_dir}"/.[!.]*
     if [ "${CHECKSUMS}" = true ]; then
         msg "Generate checksums for [$1]"
-        cd "$"
+        cd "$1"
         content=$(mktemp)
         newcontent=$(mktemp)
         ls > "$content"
