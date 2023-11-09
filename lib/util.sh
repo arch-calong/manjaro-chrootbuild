@@ -4,7 +4,7 @@ ARCH=$(uname -m)
 START_DIR=${PWD}
 CHROOT_DIR=/var/lib/chrootbuild
 PAC_CONF_TPL=/etc/chrootbuild/pacman.conf.${ARCH}
-[ "$EUID" = 0 ] && USER_HOME=/home/${SUDO_USER} || USER_HOME=$HOME
+[[ $EUID = 0 ]] && USER_HOME=/home/${SUDO_USER} || USER_HOME=$HOME
 BUILDUSER_UID="${SUDO_UID:-$UID}"
 BUILDUSER_GID="$(id -g "${BUILDUSER_UID}")"
 RM_PKGS=false
@@ -101,7 +101,7 @@ err_build() {
 }
 
 check_root() {
-    if [ ${EUID} -ne 0 ]; then
+    if [[ ${EUID} -ne 0 ]]; then
         err "This application needs to be run as root."
         exit 1
     fi
@@ -112,13 +112,13 @@ query_conf() {
 }
 
 get_mp_conf() {
-    [ -f "${MP_CONF_USER}" ] && CONF=$(query_conf "$1" "${MP_CONF_USER}")
-    [ -z "${CONF}" ] && CONF=$(query_conf "$1" "${MP_CONF_GLOB}")
-    echo "${CONF//\"/}"
+    [[ -f ${MP_CONF_USER} ]] && CONF=$(query_conf $1 ${MP_CONF_USER})
+    [[ -z ${CONF} ]] && CONF=$(query_conf $1 ${MP_CONF_GLOB})
+    echo ${CONF//\"/}
 }
 
 get_config() {
-    echo "$(get_mp_conf "$1")"
+    echo $(get_mp_conf $1)
 }
 
 cleanup() {
@@ -126,10 +126,10 @@ cleanup() {
     msg4 "$mesg"
     umount -l ${CHROOT_DIR} 2>/dev/null
     for f in ${CHROOT_DIR}/.{mount,lock} "${START_DIR}/*.list.work" $mon $mon_wait; do
-        [ -e "$f" ] && rm "$f"
+        [[ -e $f ]] && rm $f
     done
     return 0
-}
+    }
 
 abort() {
     err "$1"
@@ -141,19 +141,19 @@ job() {
     local func=$1
     shift
     arr=("$@")
-    for i in "${arr[@]}"; do
-        $func "$i"
+    for i in ${arr[@]}; do
+        $func $i
     done
 }
 
 check_sanity() {
-    if [ "${check}" = list ]; then
-        if [ ! -f "$1".list ]; then
+    if [[ ${check} = list ]]; then
+        if [[ ! -f $1.list ]]; then
             abort "Could not find buildlist [$1.list]. Aborting."
-        elif [ ! -d "$1" ]; then
+        elif [[ ! -d $1 ]]; then
             abort "Could not find directory [$1]. Aborting."
         fi
-    elif [ ! -f "$1"/PKGBUILD ]; then
+    elif [[ ! -f $1/PKGBUILD ]]; then
         abort "Could not find PKGBUILD for [$1]. Aborting."
     fi
 }
@@ -161,15 +161,15 @@ check_sanity() {
 prepare_lists() {
     check=list
     job check_sanity "${lists[@]}"
-    . "${LIBDIR}"/util-lists.sh
+    . ${LIBDIR}/util-lists.sh
     msg_wait
     prepare_log
     #ssh_add
     msg "List(s) to build:"
     printf " - %s\n" "${lists[@]//\//}"
-    printf "\n$(date -u +"%y/%m/%d %R:%S %Z"):\nBUILDING LISTS\n" >> "$log"
-    printf " - %s\n" "${lists[@]//\//}" >> "$log"
-    echo "" >> "$log"
+    printf "\n$(date -u +"%y/%m/%d %R:%S %Z"):\nBUILDING LISTS\n" >> $log
+    printf " - %s\n" "${lists[@]//\//}" >> $log
+    echo "" >> $log
 }
 
 prepare_pkgs() {
@@ -184,7 +184,7 @@ root_own() {
 }
 
 user_own() {
-    chown -R "${BUILDUSER_UID}:${BUILDUSER_GID}" .
+    chown -R ${BUILDUSER_UID}:${BUILDUSER_GID} .
 }
 
 start_agent(){
@@ -198,13 +198,13 @@ start_agent(){
 ssh_add(){
     local ssh_env="$USER_HOME/.ssh/environment"
 
-    if [ -f "${ssh_env}" ]; then
+    if [[ -f "${ssh_env}" ]]; then
          . "${ssh_env}" > /dev/null
-         ps -ef | grep "${SSH_AGENT_PID}" | grep ssh-agent$ > /dev/null || {
-            start_agent "${ssh_env}";
+         ps -ef | grep ${SSH_AGENT_PID} | grep ssh-agent$ > /dev/null || {
+            start_agent ${ssh_env};
         }
     else
-        start_agent "${ssh_env}";
+        start_agent ${ssh_env};
     fi
 }
 
@@ -243,7 +243,7 @@ usage_chrootbuild() {
     echo '     -u          Build pkgs only if update available (lists only)'
     echo '     -x          Remove previously built packages in $PKGDEST'
     echo ''
-    exit "$1"
+    exit $1
 }
 
 usage_prepare_chroot() {
@@ -264,5 +264,5 @@ usage_prepare_chroot() {
     echo '     -M <url>    Use custom mirror'
     echo '     -u          Unmount Chroot filesystem cleanly'
     echo ''
-    exit "$1"
+    exit $1
 }

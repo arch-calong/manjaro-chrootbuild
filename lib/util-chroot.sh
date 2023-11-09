@@ -2,12 +2,12 @@
 
 get_pkg_dir() {
     PKG_DIR=$(get_mp_conf PKGDEST)
-    [ -z "${PKG_DIR}" ] && PKG_DIR="${START_DIR}"
+    [[ -z ${PKG_DIR} ]] && PKG_DIR=${START_DIR}
 }
 
 get_src_dir() {
     SRC_DIR=$(get_mp_conf SRCDEST)
-    [ -z "${SRC_DIR}" ] && SRC_DIR="${START_DIR}"
+    [[ -z ${SRC_DIR} ]] && SRC_DIR=${START_DIR}
 }
 
 get_default_branch() {
@@ -19,10 +19,10 @@ get_default_branch() {
 
 create_min_fs(){
     msg "Create install root at [$1]"
-    rm -rf "$1"/*
-    mkdir -m 0755 -p "$1"/var/{cache/pacman/pkg,lib/pacman,log} "$1"/{dev,run,etc}
-    mkdir -m 1777 -p "$1"/tmp
-    mkdir -m 0555 -p "$1"/{sys,proc}
+    rm -rf $1/*
+    mkdir -m 0755 -p $1/var/{cache/pacman/pkg,lib/pacman,log} $1/{dev,run,etc}
+    mkdir -m 1777 -p $1/tmp
+    mkdir -m 0555 -p $1/{sys,proc}
 }
 
 chroot_mount_conditional() {
@@ -41,14 +41,14 @@ chroot_api_mount() {
     mount shm "$1/dev/shm" -t tmpfs -o mode=1777,nosuid,nodev &&
     mount run "$1/run" -t tmpfs -o nosuid,nodev,mode=0755 &&
     mount tmp "$1/tmp" -t tmpfs -o mode=1777,strictatime,nodev,nosuid
-    mount -o bind /var/cache/pacman/pkg "$1"/var/cache/pacman/pkg
-    touch "$1"/.mount
+    mount -o bind /var/cache/pacman/pkg $1/var/cache/pacman/pkg
+    touch $1/.mount
 }
 
 set_branch() {
-    sed -i "/Branch =/c\Branch = $1" "${mirror_conf}"
-    echo "Server = ${MIRROR}/""$1""/\$repo/\$arch" > "${CHROOT_DIR}/etc/pacman.d/mirrorlist"
-    echo "$1" > "${CHROOT_DIR}"/.branch
+    sed -i "/Branch =/c\Branch = $1" ${mirror_conf}
+    echo "Server = ${MIRROR}/$1/\$repo/\$arch" > "${CHROOT_DIR}/etc/pacman.d/mirrorlist"
+    echo $1 > ${CHROOT_DIR}/.branch
 }
 
 add_repo() {
@@ -65,83 +65,83 @@ add_repo() {
 }
 
 conf_pacman() {
-    cp "${PAC_CONF_TPL}" "${pac_conf}"
-    sed -i "s/@BRANCH@/$BRANCH/g; s|@MIRROR@|$MIRROR|g" "${pac_conf}"
-    if [ ! -z "$custom_repo" ]; then
-        if [ "$custom_repo" = mobile ]; then
-            if [ ! "$ARCH" = aarch64 ]; then
+    cp ${PAC_CONF_TPL} ${pac_conf}
+    sed -i "s/@BRANCH@/$BRANCH/g; s|@MIRROR@|$MIRROR|g" ${pac_conf}
+    if [[ ! -z $custom_repo ]]; then
+        if [[ $custom_repo = mobile ]]; then
+            if [[ ! $ARCH = aarch64 ]]; then
                 err "Repo 'mobile' is not available for this architecture and will be skipped."
             else
-                add_repo "$custom_repo"
+                add_repo $custom_repo
             fi
         else
-            add_repo "$custom_repo"
+            add_repo $custom_repo
         fi
     fi
 }
 
 update_chroot() {
-    [ ! -e "$1"/.mount ] && chroot_api_mount "$1" && touch "$1"/.{mount,lock}
+    [[ ! -e $1/.mount ]] && chroot_api_mount $1 && touch $1/.{mount,lock}
     msg "Configure branch [$2]"
     conf_pacman
-    set_branch "$2"
+    set_branch $2
     msg "Update chroot file system"
-    sudo chroot "$1" pacman -Syu --noconfirm || abort "Failed to update chroot."
+    sudo chroot $1 pacman -Syu --noconfirm || abort "Failed to update chroot."
 }
 
 create_chroot() {
-    create_min_fs "$1"
-    chroot_api_mount "$1" && touch "$1"/.{mount,lock}
-    [ "${MULTILIB}" = true ] && touch "$1"/.multilib
+    create_min_fs $1
+    chroot_api_mount $1 && touch $1/.{mount,lock}
+    [[ ${MULTILIB} = true ]] && touch $1/.multilib
 
     msg "Install build environment"
     conf_pacman
     base_pkgs=('base-devel')
-    [ "${MULTILIB}" = true ] && base_pkgs+=('multilib-devel')
-    if [ "${HOST_KEYS}" = false ]; then
+    [[ ${MULTILIB} = true ]] && base_pkgs+=('multilib-devel')
+    if [[ ${HOST_KEYS} = false ]]; then
         keyrings=('archlinux' 'manjaro')
-        [ "${ARCH}" = aarch64 ] && keyrings=('archlinuxarm' 'manjaro-arm' 'manjaro')
+        [[ ${ARCH} = aarch64 ]] && keyrings=('archlinuxarm' 'manjaro-arm' 'manjaro')
         base_pkgs+=("${keyrings[@]/%/-keyring}")
     fi
-    pacman -r "$1" --config "${pac_conf}" -Syy "${base_pkgs[@]}" --noconfirm || abort "Failed to install chroot filesystem."
+    pacman -r $1 --config ${pac_conf} -Syy "${base_pkgs[@]}" --noconfirm || abort "Failed to install chroot filesystem."
 
     echo "Backing up pacman-mirrors.conf..."
-    cp "${CHROOT_DIR}"/etc/pacman-mirrors.conf "${CHROOT_DIR}"/etc/pacman-mirrors.conf.bak
+    cp ${CHROOT_DIR}/etc/pacman-mirrors.conf ${CHROOT_DIR}/etc/pacman-mirrors.conf.bak
 
     echo "Removing pacman-mirrors & Python packages to ensure clean chroot..."
-    pacman -r "$1" --config "${pac_conf}" -Rdd pacman-mirrors python python-certifi python-chardet python-idna python-npyscreen python-requests python-urllib3 libnsl --noconfirm
+    pacman -r $1 --config ${pac_conf} -Rdd pacman-mirrors python python-certifi python-chardet python-idna python-npyscreen python-requests python-urllib3 libnsl --noconfirm
 
     echo "Restoring pacman-mirrors.conf..."
-    cp "${CHROOT_DIR}"/etc/pacman-mirrors.conf.bak "${CHROOT_DIR}"/etc/pacman-mirrors.conf
+    cp ${CHROOT_DIR}/etc/pacman-mirrors.conf.bak ${CHROOT_DIR}/etc/pacman-mirrors.conf
 
-    if [ "${HOST_KEYS}" = true ]; then
+    if [[ ${HOST_KEYS} = true ]]; then
         msg "Copy keyring"
         cp -a /etc/pacman.d/gnupg "$1/etc/pacman.d/"
     else
         msg "Populate keyrings."
-        chroot "$1" pacman-key --init
-        chroot "$1" pacman-key --populate "${keyrings[@]}"
+        chroot $1 pacman-key --init
+        chroot $1 pacman-key --populate "${keyrings[@]}"
     fi
     msg "Create locale"
     printf '%s.UTF-8 UTF-8\n' C en_US de_DE > "$1/etc/locale.gen"
     echo 'LANG=C.UTF-8' > "$1/etc/locale.conf"
     printf 'LC_MESSAGES=C\n' >> "$1/etc/locale.conf"
-    chroot "$1" locale-gen
-    cp /etc/resolv.conf "$1"/etc/resolv.conf
+    chroot $1 locale-gen
+    cp /etc/resolv.conf $1/etc/resolv.conf
     touch "$1/.manjaro-chroot"
 
     # add builduser
     local install="install -o ${BUILDUSER_UID} -g ${BUILDUSER_GID}"
     local x
 
-    printf >>"$1/etc/group"  'builduser:x:%d:\n' "${BUILDUSER_GID}"
-    printf >>"$1/etc/passwd" 'builduser:x:%d:%d:builduser:/build:/bin/bash\n' "${BUILDUSER_UID}" "${BUILDUSER_GID}"
+    printf >>"$1/etc/group"  'builduser:x:%d:\n' ${BUILDUSER_GID}
+    printf >>"$1/etc/passwd" 'builduser:x:%d:%d:builduser:/build:/bin/bash\n' ${BUILDUSER_UID} ${BUILDUSER_GID}
     printf >>"$1/etc/shadow" 'builduser:!!:%d::::::\n' "$(( $(date -u +%s) / 86400 ))"
 
     $install -d "$1"/{build,build/.gnupg,startdir,{pkg,srcpkg,src,log}dest}
 
     for x in .gnupg/pubring.{kbx,gpg}; do
-        [ -r "${USER_HOME}"/"$x" ] || continue
+        [[ -r ${USER_HOME}/$x ]] || continue
         $install -m 644 "${USER_HOME}/$x" "$1/build/$x"
     done
 
@@ -155,17 +155,17 @@ EOF
     PACKAGER="\"$(get_config PACKAGER)\""
     sed -e '/^PACKAGER=/d' -i "$1/${MP_CONF_GLOB}"
     for x in BUILDDIR=/build PKGDEST=/pkgdest SRCPKGDEST=/srcpkgdest SRCDEST=/srcdest \
-        "MAKEFLAGS="-j$(($(nproc)+1))"" \
+        'MAKEFLAGS="-j$(($(nproc)+1))"' \
         LOGDEST=/logdest "PACKAGER=${PACKAGER}" GPGKEY=${GPGKEY}
     do
         grep -q "^$x" "$1/${MP_CONF_GLOB}" && continue
         echo "$x" >>"$1/${MP_CONF_GLOB}"
     done
     OPTIONS=$(grep "^OPTIONS=" "$1/${MP_CONF_GLOB}")
-    if [ "${DEBUG}" = true ]; then
+    if [[ ${DEBUG} = true ]]; then
       OPTIONS=$(sed 's/!debug/debug/' <<< "$OPTIONS")
     fi
-    if [ "${LTO}" = true ]; then
+    if [[ ${LTO} = true ]]; then
       OPTIONS=$(sed 's/!lto/lto/' <<< "$OPTIONS")
     fi
     sed -i -e "s/^OPTIONS=.*/${OPTIONS}/" "$1/${MP_CONF_GLOB}"
@@ -173,50 +173,50 @@ EOF
     # install buildscript
     install -m755 /etc/chrootbuild/build.sh "$1/usr/bin/chrootbuild"
 
-    update_chroot "$1" "${BRANCH}"
+    update_chroot $1 ${BRANCH}
 }
 
 # create/update chroot build environment
 prepare_chroot() {
     pac_conf=${CHROOT_DIR}/etc/pacman.conf
     mirror_conf=${CHROOT_DIR}/${MIRROR_CONF}
-    if [ -e "$1"/.manjaro-chroot ]; then
-        if [ -e "$1"/.lock ]; then
-            if [ "${FORCE_UNMOUNT}" = true ]; then
+    if [[ -e $1/.manjaro-chroot ]]; then
+        if [[ -e $1/.lock ]]; then
+            if [[ ${FORCE_UNMOUNT} = true ]]; then
                 unmount=y
             else
                 err_choice "Chroot is busy. Force unmount? [y/N]"
                     read unmount
             fi
-            if [ "${unmount}" = y ]; then
+            if [[ ${unmount} = y ]]; then
                 cleanup "Re-mounting chroot filesystem."
             else
                 exit 1
             fi
         fi
-        if [ "${MULTILIB}" = true ]; then
-            if [ ! -e "$1"/.multilib ]; then
+        if [[ ${MULTILIB} = true ]]; then
+            if [[ ! -e $1/.multilib ]]; then
                 msg "Rebuilding chroot for multilib"
                 CLEAN=true
             fi
         else
-            if [ -e "$1"/.multilib ]; then
+            if [[ -e $1/.multilib ]]; then
                 msg "Removing multilib chroot"
                 CLEAN=true
             fi
         fi
-        if [ $(cat "$1"/.branch) != "${BRANCH}" ]; then
+        if [[ $(cat $1/.branch) != ${BRANCH} ]]; then
             msg "Rebuilding chroot for branch [${BRANCH}]"
             CLEAN=true
         fi
-        if [ "${CLEAN}" = true ]; then
+        if [[ ${CLEAN} = true ]]; then
             msg "Delete old chroot file system"
-            rm -rf "$1"/*
-            create_chroot "$1"
+            rm -rf $1/*
+            create_chroot $1
         else
-            update_chroot "$1" "${BRANCH}"
+            update_chroot $1 ${BRANCH}
         fi
     else
-        create_chroot "$1"
+        create_chroot $1
     fi
 }

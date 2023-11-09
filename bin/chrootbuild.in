@@ -38,19 +38,19 @@ while getopts "b:cdDfghHi:k:K:l:LmM:np:r:suxG" arg; do
 done
 shift $((OPTIND -1))
 
-[ "${COLORS}" = true ] && enable_colors
+[[ ${COLORS} = true ]] && enable_colors
 
 check_root
-[ ! -z "${lists}" ] && prepare_lists
-[ ! -z "${pkgs}" ] && prepare_pkgs
-[ "${check}" = none ] && abort "No list or package specified. Aborting."
+[[ ! -z ${lists} ]] && prepare_lists
+[[ ! -z ${pkgs} ]] && prepare_pkgs
+[[ ${check} = none ]] && abort "No list or package specified. Aborting."
 
-prepare_chroot "${CHROOT_DIR}"
-[ "${INSTALL_LOCAL}" = true ] && install_local_pkgs
-[ "${RM_PKGS}" = true ] && rm_pkgs
+prepare_chroot ${CHROOT_DIR}
+[[ ${INSTALL_LOCAL} = true ]] && install_local_pkgs
+[[ ${RM_PKGS} = true ]] && rm_pkgs
 job build_pkg "${pkgs[@]}"
-[ "${UPDATE}" = true ] && job build_list_git "${lists[@]}" || job build_list "${lists[@]}" 
-[ "${SIGN}" = true ] && gpg_sign "${PKG_DIR}"
-[ "${check}" = list ] && summary
+[[ ${UPDATE} = true ]] && job build_list_git "${lists[@]}" || job build_list "${lists[@]}" 
+[[ ${SIGN} = true ]] && gpg_sign ${PKG_DIR}
+[[ ${check} = list ]] && summary
 
 cleanup
