@@ -54,7 +54,7 @@ summary() {
 
 build_list() {
     cd "${START_DIR}"
-    prepare_list "$1"
+    prepare_list "$"
 
     msg5 "* ${1%-git}: Building packages."
     i=1
@@ -63,7 +63,7 @@ build_list() {
         LOG_FILE="${LOG_DIR}/${p}_$(date +'%Y%m%d%H%M')"
         msg4 "logfile: $LOG_FILE"
         echo "${LOG_FILE}" > $mon
-        cd "$1"
+        cd "$"
         build_pkg "$p" &>"${LOG_FILE}"
         if [ "${status}" != 0 ]; then
             printf "! FAILED [$p], see ${LOG_FILE}\n" >> "$log"
@@ -81,7 +81,7 @@ build_list() {
 
 build_list_git() {
     cd "${START_DIR}"
-    prepare_list "$1"
+    prepare_list "$"
 
     msg5 "* ${1%-git}: Comparing git versions."
     i=1

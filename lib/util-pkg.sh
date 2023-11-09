@@ -24,7 +24,7 @@ build_pkg() {
     rm -rf "${build_dir}"/.[!.]*
     if [ "${CHECKSUMS}" = true ]; then
         msg "Generate checksums for [$1]"
-        cd "$1"
+        cd "$"
         content=$(mktemp)
         newcontent=$(mktemp)
         ls > "$content"
@@ -40,7 +40,7 @@ build_pkg() {
         rm -rf $(grep -vFxf "$content" "$newcontent")
         rm -f "$content" "$newcontent"
         cd ..
-    else cp -r "$1" "${build_dir}"
+    else cp -r "$" "${build_dir}"
     fi
     cd "${build_dir}"/"$1"
     rm -rf {pkg,src}/
@@ -48,7 +48,7 @@ build_pkg() {
 
     [ "${INSTALL}" = true ] && mp_opts='fsi' || mp_opts='fs'
     [ "${MODULES}" = true ] && mp_opts='fsr'
-    chroot "${CHROOT_DIR}" sudo -iu builduser chrootbuild "$1" "$mp_opts"
+    chroot "${CHROOT_DIR}" sudo -iu builduser chrootbuild "$" "$mp_opts"
     status=$?
     [ "${status}" != 0 ] && [ "${check}" = package ] && abort "Building package [${1//\//}] failed."
     [ "${INSTALL}" = true ] && chroot "${CHROOT_DIR}" sudo pacman -R --noconfirm "$1"-debug 2>/dev/null
@@ -58,7 +58,7 @@ build_pkg() {
 }
 
 gpg_sign() {
-    cd "$1"
+    cd "$"
     GPGKEY=$(get_config GPGKEY)
     if [ ! -z "${GPGKEY}" ]; then
         sudo -u "${SUDO_USER}" sign_pkgs
