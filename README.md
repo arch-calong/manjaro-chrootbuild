@@ -13,7 +13,7 @@ Combined jobs of building packages and list are also possible, where built packa
 `$validpgpkeys` specified in a PKGBUILD will be received automatically before bulding the package.
 ```
 Usage: chrootbuild [options]
-     -b <branch> Branch to use (unstable/testing/stable-staging/stable;
+     -b <branch> Branch to use (unstable/testing/stable;
                                 arm-unstable/arm-testing/arm-stable)
                                 default: unstable / arm-unstable)
      -c          Start with clean chroot fs
@@ -48,7 +48,7 @@ Usage: chrootbuild [options]
 - **prepare_chroot** - Install chroot filesystem and update with defined branch.
 ```
 Usage: prepare_chroot [options]"
-     -b <branch> Branch to use (unstable/testing/stable-staging/stable;
+     -b <branch> Branch to use (unstable/testing/stable;
                                 arm-unstable/arm-testing/arm-stable)
                                 default: unstable / arm-unstable)
      -c          Create clean chroot filesystem

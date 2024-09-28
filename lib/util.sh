@@ -213,7 +213,7 @@ usage_chrootbuild() {
     echo "Usage: ${0##*/} [options]"
     echo ''
     echo '     -b <branch> Branch to use:'
-    echo '                 (unstable/testing/stable-staging/stable;'
+    echo '                 (unstable/testing/stable;'
     echo '                 arm-unstable/arm-testing/arm-stable)'
     echo '                 default: unstable / arm-unstable'
     echo '     -c          Start with clean chroot fs'
@@ -251,7 +251,7 @@ usage_prepare_chroot() {
     echo "Usage: ${0##*/} [options]"
     echo ''
     echo '     -b <branch> Branch to use:'
-    echo '                 (unstable/testing/stable-staging/stable;'
+    echo '                 (unstable/testing/stable;'
     echo '                 arm-unstable/arm-testing/arm-stable)'
     echo '                 default: unstable / arm-unstable'
     echo '     -c          Create clean chroot filesystem'
